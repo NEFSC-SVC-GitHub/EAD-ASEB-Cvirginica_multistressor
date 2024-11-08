@@ -455,7 +455,10 @@ for (i in 1:nrow(D2_modCols)) {
     dplyr::filter(moduleColor %in% loopModCol)
   # all modules per mod color (with significant eigengene-treatment interaction) - Module Membership p < 0.05 based on DEG overalap (view R script)
   ModMem_0.05    <- ModMem %>% 
-    dplyr::filter(.[[7]] < 0.05 & .[[8]] > 0.6) %>% 
+    # note we are going with the pearsons p value < 0.05 to reduce module membership to significant corr only
+    dplyr::filter(.[[7]] < 0.05) %>% # pearsons p vlaue < 0.05 
+    #dplyr::filter(.[[8]] > 0.6) %>% # pearsons p vlaue < 0.05 
+    #dplyr::filter(.[[7]] < 0.05 & .[[8]] > 0.6) %>%  # pearsons p value < 0.05 and corr coeff > 0.6
     dplyr::rename(MM.p = 7, MM.cor = 8) %>% 
     dplyr::arrange(desc(MM.cor))
 
@@ -464,7 +467,33 @@ for (i in 1:nrow(D2_modCols)) {
   print(D2_modCols_cutoff) # print to monitor progress
   
 }
-View(D2_modCols_cutoff)
+# View(D2_modCols_cutoff)
+MM_corr_coef_meanbymodule <- Rmisc::summarySE(D2_modCols_cutoff, measurevar ='MM.cor', groupvar = 'moduleColor')
+# moduleColor   N    MM.cor        sd          se         ci
+# 1       black 288 0.6470621 0.1364898 0.008042741 0.01583024
+# 2        blue 467 0.6725136 0.1481029 0.006853384 0.01346736
+# 3       brown 531 0.6656593 0.1408254 0.006111304 0.01200535
+# 4        pink 263 0.6277515 0.1285491 0.007926678 0.01560810
+# 5         red 377 0.6322274 0.1371437 0.007063262 0.01388844
+# 6   turquoise 576 0.6223162 0.1276353 0.005318139 0.01044535
+MM_corr_coef_meantotal <- Rmisc::summarySE(MM_corr_coef_meanbymodule, measurevar ='MM.cor')
+# N mean        sd       se          ci
+# 6 0.6445883 0.02079541 0.008489689 0.02182344
+
+D2_modCols_cutoff %>% dplyr::group_by(moduleColor) %>% dplyr::summarise(n=n())
+# number of genes in module cut by ONLY pearsons < 0.05
+# 1 black         288
+# 2 blue          467
+# 3 brown         531
+# 4 pink          263
+# 5 red           377
+# 6 turquoise     576
+
+
+# NOTE FOLLOWING REVIEWER #2 FROM E & E, THE PEARSONS ALONE TRUNCATED THE MODULE IN ABSENCE OF THE DESEQ2 OVERLAP GUIDANCE
+# FOR THE PEARSON CORR COEFF
+
+
 
 # save reduced representation 'RR' cutoff
 write.csv(D2_modCols_cutoff, file = paste("Output/WGCNA/day2_larvae/d2.WGCNA_ModulMembership_RRcutoff.csv", sep ='')) 
@@ -490,7 +519,10 @@ for (i in 1:nrow(D18_modCols)) {
     dplyr::filter(moduleColor %in% loopModCol)
   # all modules per mod color (with significant eigengene-treatment interaction) - Module Membership p < 0.05 based on DEG overalap (view R script)
   ModMem_0.05    <- ModMem %>% 
-    dplyr::filter(.[[7]] < 0.05 & .[[8]] > 0.6) %>% 
+    # note we are going with the pearsons p value < 0.05 to reduce module membership to significant corr only
+    dplyr::filter(.[[7]] < 0.05) %>% # pearsons p vlaue < 0.05 
+    #dplyr::filter(.[[8]] > 0.6) %>% # pearsons p vlaue < 0.05 
+    #dplyr::filter(.[[7]] < 0.05 & .[[8]] > 0.6) %>%  # pearsons p value < 0.05 and corr coeff > 0.6
     dplyr::rename(MM.p = 7, MM.cor = 8) %>% 
     dplyr::arrange(desc(MM.cor))
   
@@ -500,6 +532,42 @@ for (i in 1:nrow(D18_modCols)) {
   
 }
 View(D18_modCols_cutoff)
+MM_corr_coef_meanbymodule <- Rmisc::summarySE(D18_modCols_cutoff, measurevar ='MM.cor', groupvar = 'moduleColor')
+# 1        blue 515 0.8038664 0.09490500 0.004182014 0.008215943
+# 2       green 292 0.8042924 0.09287966 0.005435371 0.010697623
+# 3         red 181 0.7912190 0.09210773 0.006846313 0.013509357
+# 4      salmon 399 0.8116532 0.08851691 0.004431388 0.008711854
+# 5         tan 128 0.7776220 0.08811458 0.007788302 0.015411644
+# 6   turquoise 672 0.8143073 0.09656793 0.003725189 0.007314429
+MM_corr_coef_meantotal <- Rmisc::summarySE(MM_corr_coef_meanbymodule, measurevar ='MM.cor')
+# N mean        sd       se          ci
+# 6 0.8004934 0.01378616 0.005628175 0.01446768
+
+D18_modCols_cutoff %>% dplyr::group_by(moduleColor) %>% dplyr::summarise(n=n())
+# number of genes in module cut by ONLY pearsons < 0.05
+# 1 blue          515
+# 2 green         292
+# 3 red           181
+# 4 salmon        399
+# 5 tan           128
+# 6 turquoise     672
+# number of genes per module cut by BOTH pearsons < 0.05 and corr coref > 0.6 does not change the outcome of pearsons p value alone
+# 1 blue          515
+# 2 green         292
+# 3 red           181
+# 4 salmon        399
+# 5 tan           128
+# 6 turquoise     672
+# number of genes per module vut by ONLY pearsons > 0.6 as determined by deseq2 overlap genes,  DIFFERS SLIGHTLY
+# 1 blue          552
+# 2 green         309
+# 3 red           194
+# 4 salmon        418
+# 5 tan           132
+# 6 turquoise     719
+
+# NOTE FOLLOWING REVIEWER #2 FROM E & E, THE PEARSONS ALONE TRUNCATED THE MODULE IN ABSENCE OF THE DESEQ2 OVERLAP GUIDANCE
+# FOR THE PEARSON CORR COEFF
 
 # save reduced representation 'RR' cutoff
 write.csv(D18_modCols_cutoff, file = paste("Output/WGCNA/day18_spat/d18.WGCNA_ModulMembership_RRcutoff.csv", sep ='')) 
